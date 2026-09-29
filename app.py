@@ -219,13 +219,14 @@ def get_image_embedding(image):
         return_tensors="pt"
     )
 
-    pixel_values = inputs[
-        "pixel_values"
-    ].to(device)
+    pixel_values = inputs["pixel_values"].to(device)
 
-    features = model.get_image_features(
-        pixel_values=pixel_values
+    outputs = model.get_image_features(
+        pixel_values=pixel_values,
+        return_dict=True
     )
+
+    features = outputs.pooler_output
 
     features = features / features.norm(
         dim=-1,
