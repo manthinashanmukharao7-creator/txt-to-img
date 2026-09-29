@@ -1,6 +1,6 @@
 streamlit
 torch
 torchvision
-transformers>=5.0.0
+transformers==5.6.1
 Pillow
 requests

@@ -190,16 +190,27 @@ def get_text_embedding(text):
         padding=True
     )
 
-    inputs = {
-        key: value.to(device)
-        for key, value in inputs.items()
-    }
+    input_ids = inputs["input_ids"].to(device)
+    attention_mask = inputs["attention_mask"].to(device)
 
-    features = model.get_text_features(
-        **inputs
+    # Directly run CLIP text encoder
+    text_outputs = model.text_model(
+        input_ids=input_ids,
+        attention_mask=attention_mask,
+        return_dict=True
     )
 
-    features = features / features.norm(
+    # Get pooled text representation
+    pooled_output = text_outputs.pooler_output
+
+    # CLIP projection
+    features = model.text_projection(
+        pooled_output
+    )
+
+    # Normalize
+    features = features / torch.norm(
+        features,
         dim=-1,
         keepdim=True
     )
@@ -221,14 +232,23 @@ def get_image_embedding(image):
 
     pixel_values = inputs["pixel_values"].to(device)
 
-    outputs = model.get_image_features(
+    # Directly run CLIP vision encoder
+    image_outputs = model.vision_model(
         pixel_values=pixel_values,
         return_dict=True
     )
 
-    features = outputs.pooler_output
+    # Get pooled image representation
+    pooled_output = image_outputs.pooler_output
 
-    features = features / features.norm(
+    # CLIP projection
+    features = model.visual_projection(
+        pooled_output
+    )
+
+    # Normalize
+    features = features / torch.norm(
+        features,
         dim=-1,
         keepdim=True
     )
